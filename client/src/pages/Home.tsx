@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Bell, Sparkles } from "lucide-react";
+import { Plus, Bell, Sparkles, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 import { type Reminder } from "@shared/schema";
 import { ReminderCard } from "@/components/ReminderCard";
 import { ReminderDialog } from "@/components/ReminderDialog";
@@ -12,10 +15,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Home() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const { user, signOut } = useAuth();
 
   const { data: reminders, isLoading } = useQuery<Reminder[]>({
     queryKey: ["/api/reminders"],
   });
+
+  const getUserInitials = (email: string) => {
+    return email.substring(0, 2).toUpperCase();
+  };
 
   const handleEdit = (reminder: Reminder) => {
     setEditingReminder(reminder);
@@ -67,7 +75,7 @@ export default function Home() {
                   </>
                 )}
               </div>
-              <Button 
+              <Button
                 onClick={() => setIsDialogOpen(true)}
                 size="lg"
                 className="gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
@@ -77,6 +85,32 @@ export default function Home() {
                 <span className="hidden sm:inline font-semibold">New Reminder</span>
                 <span className="sm:hidden font-semibold">New</span>
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold text-sm">
+                        {user?.email ? getUserInitials(user.email) : 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">Account</p>
+                      <p className="text-xs leading-none text-muted-foreground truncate">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
